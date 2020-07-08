@@ -10,7 +10,8 @@ videos <- c(
   "https://www.youtube.com/watch?v=fK2IJ43ppd0", 
   "https://www.youtube.com/watch?v=JCTzbc76WXY", 
   "https://www.youtube.com/watch?v=QRt7LjqJ45k", 
-  "https://www.youtube.com/watch?v=-LKVUarhtvE"
+  "https://www.youtube.com/watch?v=-LKVUarhtvE",
+  "https://www.youtube.com/watch?v=-EvvPZFdjyk"
 )
 
 ##### CRIANDO A FUNCAO ----
@@ -20,7 +21,7 @@ Dados_basicos_legenda <- function(Insira_Link_do_Video_aqui) {
   if(require(youtubecaption) == F) install.packages("youtubecaption"); require(youtubecaption)
   
   
-  #Insira_Link_do_Video_aqui <- "https://www.youtube.com/watch?v=fK2IJ43ppd0"
+  #Insira_Link_do_Video_aqui <- "https://www.youtube.com/watch?v=-EvvPZFdjyk"
   
   
   Legendas <- get_caption(url = Insira_Link_do_Video_aqui, savexl = FALSE, openxl = FALSE, path = getwd())
@@ -51,17 +52,18 @@ Dados_basicos_legenda <- function(Insira_Link_do_Video_aqui) {
   Legendas_corpus <- tm_map(Legendas_corpus, stripWhitespace)
   Legendas_corpus <- tm_map(Legendas_corpus, stemDocument, language = "english")
   
-  # para saber o numero de palavras sem repetição
+  # para saber o numero de palavras sem stopwords
+  legendas_limpas <- Legendas_corpus$content # vetor com as legendas limpas
+  semStopWords <- sum(str_count(legendas_limpas, boundary("word"))) 
+  
+  # para saber o numero de palavras sem repetição (vocabulário)
   textsplitWord_dtm <- DocumentTermMatrix(Legendas_corpus)
   textsplitWordMatrix <- as.matrix(textsplitWord_dtm)
   textsplitWordSorted <- sort(colSums(textsplitWordMatrix), decreasing = T)
   textsplitWordDF <- data.frame(word = names(textsplitWordSorted), freq = textsplitWordSorted)
   NwordsLegendas <- count(textsplitWordDF)  # ___ palavras diferentes
   
-  #resultados : duracao / num de palavras / num de palavras diferentes
-  TpalavrasLegendas  # ___ palavras
-  NwordsLegendas     # ___  palavras diferentes
-  TdurationLegendas  # ___ segundos
+  #Ultimos ajustes
   ratioVocPorsec <- NwordsLegendas/TdurationLegendas # ___ palavras diferentes por segundo
   ratioPalavPorsec <- TpalavrasLegendas/TdurationLegendas # ___ palavras por segundo
   
@@ -77,7 +79,7 @@ Dados_basicos_legenda <- function(Insira_Link_do_Video_aqui) {
   #   "Tempo_minutos", "textsplitWord_dtm", "textsplitWordDF", "textsplitWordMatrix", "textsplitWordSorted", 
   #   "TpalavrasLegendas", "Vocabulario", "Vocabulario_PorSeg")
   
-  tabela <- as.data.frame(cbind(N_de_Palavras, Vocabulario, Tempo_minutos, Vocabulario_PorSeg, Palavras_PorSeg))
+  tabela <- as.data.frame(cbind(N_de_Palavras, semStopWords, Vocabulario, Tempo_minutos, Vocabulario_PorSeg, Palavras_PorSeg))
   return(tabela)
 }
 
@@ -92,7 +94,7 @@ tabela <- as.data.frame(
     nrow = length(videos),
     byrow = TRUE))
 
-colnames(tabela) <- c("Número de Palavras", "Vocabulario", 
+colnames(tabela) <- c("Número de Palavras", "Número de Palavras sem StopWords", "Vocabulario sem stop words", 
                       "Tempo em minutos", "Vocabulario por segundo", 
                       "Palavras por segundo")
 
