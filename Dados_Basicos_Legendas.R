@@ -11,7 +11,8 @@ videos <- c(
   "https://www.youtube.com/watch?v=JCTzbc76WXY", 
   "https://www.youtube.com/watch?v=QRt7LjqJ45k", 
   "https://www.youtube.com/watch?v=-LKVUarhtvE",
-  "https://www.youtube.com/watch?v=-EvvPZFdjyk"
+  "https://www.youtube.com/watch?v=-EvvPZFdjyk",
+  "https://www.youtube.com/watch?v=W9X7u-MeJz0"
 )
 
 ##### CRIANDO A FUNCAO ----
@@ -98,5 +99,6 @@ colnames(tabela) <- c("Número de Palavras", "Número de Palavras sem StopWords"
                       "Tempo em minutos", "Vocabulario por segundo", 
                       "Palavras por segundo")
 
+plot(tabela$`Tempo em minutos`, tabela$`Vocabulario sem stop words`)
 
 

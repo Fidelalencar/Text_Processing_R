@@ -1,0 +1,175 @@
+---
+title: "Primeiro Relatório de Automatização de Análise de Texto - Learning Community"
+author: "Fidel"
+date: "08/03/2020"
+output: html_document
+---
+
+### 0. Exemplo de texto:
+```{r, echo = FALSE, results ='hide', warning = F}
+if(require(youtubecaption) == F) install.packages("youtubecaption"); require(youtubecaption)
+if(require(dplyr) == F) install.packages("dplyr"); require(dplyr)
+if(require(RSQLite) == F) install.packages("RSQLite"); require(RSQLite)
+if(require(stringr) == F) install.packages("stringr"); require(stringr)
+if(require(tm) == F) install.packages("tm"); require(tm)
+
+v1 <- "https://www.youtube.com/watch?v=-EvvPZFdjyk" # why you will mary the wrong person
+Legendas <- get_caption(url = v1, savexl = FALSE, openxl = FALSE, path = getwd()) # Puxando a legenda
+Legendas_vec <- pull(Legendas, text)
+
+
+Legendas_corpus <- Corpus(VectorSource(Legendas_vec)) # essa lina cria o corpus a partir do vetor
+legendas_limpas <- Legendas_corpus$content # essa linha devolve ao vetor
+```
+
+```{r, echo = FALSE, warning = F}
+text <-  str_c(legendas_limpas,    # unindo os elementos do vetor de strings em um so string
+               sep = "",           # string para separar diferentes vetores (no caso, só uso 1 - não precisa)
+               collapse = "\n")    # string para separar os elementos do vetor
+
+```
+
+```{r} 
+cat(text) # Função para imprimir com as separaçõoes de linha
+```
+
+### 1. Gerando o texto com as lacunas e as opções de preenchimento. 
+
+```{r}
+text1 <- str_replace_all(text, c("The ", " the "), c(" ______ (The / - )", " ______ ( the / - )"))
+cat(text1)
+```
+
+### 2. Encontrando palavras *terminadas em -ed ou -t* no texto. Primeira tentativa de encontrar *Past Simple*:
+
+```{r}
+# Separando texto por palavras
+textsplitWord <- strsplit(text, " ")[[1]]
+textsplitWord <- gsub("\n", "", textsplitWord)
+```
+
+Foram encontrados os `r length(grep("(ed|t)$", textsplitWord, value = T))` resultados seguintes:
+
+```{r}
+grep("(ed|t)$", textsplitWord, value = T)
+```
+Como se vê, o resultado é muito fraco. A primeira coisa a se fazer é buscar os verbos irregulares.
+
+Capturando lista de verbos irregulares [daqui](https://www.gingersoftware.com/content/grammar-rules/verbs/list-of-irregular-verbs/):
+
+```{r, echo = F, warning=F, message=F, error=F}
+if(require(tidyverse) == F) install.packages('tidyverse'); require(tidyverse)
+if(require(rvest) == F) install.packages('rvest'); require(rvest)
+if(require(httr) == F) install.packages('httr'); require(httr)
+if(require(xml2) == F) install.packages('xml2'); require(xml2)
+```
+
+```{r, echo = T, results = 'hide', warning=F, message=F, error=F}
+link <- "https://www.gingersoftware.com/content/grammar-rules/verbs/list-of-irregular-verbs/"
+irregularVerbs <- link %>% httr::GET() %>% xml2::read_html() %>% rvest::html_node('table') %>% rvest::html_table(header = TRUE)
+```
+
+```{r, echo = F, results = 'hide', warning=F, message=F, error=F}
+irregularVerbs
+```
+
+#### 2.1. Criando string para implementar expressões alternativas com os verbos no *simple past*:
+
+```{r, echo = T, results = 'hide', warning=F, message=F, error=F}
+PastSimple <- c(irregularVerbs[2]) # extraindo a coluna dos past simples para uma lista
+PastSimple <- PastSimple[[1]] # tornando a lista em um vetor
+PastSimple1 <- paste(PastSimple, sep = " ", collapse = "$|^" ) # colocando o ou no vetor
+PastSimple2 <- gsub("/", "$|^", PastSimple1) # colocando ou nos linhas com mais de 1 opção
+PastSimple2
+# cuidado com o 'had to'
+# E´preciso acrescentar ainda alguns termos no string, Porque verbos como "lit" estão sendo detectados em palavras como "reality"
+# Pensei na seguinte solução (aparentemente funcionou): acrescentar $|^ no separador dos verbos. Mais ^ no início e $ no fim.
+```
+
+#### 2.2. Buscando *simple past* implementando os verbos irregulares:
+
+Foram encontrados os `r length(grep("^arose$|^awoke$|^was$|^were$|^bore$|^beat$|^became$|^began$|^bent$|^bet$|^bound$|^bit$|^bled$|^blew$|^broke$|^bred$|^brought$|^broadcast$|^built$|^burnt$|^burned$|^burst$|^bought$|^could$|^caught$|^chose$|^clung$|^came$|^cost$|^crept$|^cut$|^dealt$|^dug$|^did$|^drew$|^dreamt$|^dreamed$|^drank$|^drove$|^ate$|^fell$|^fed$|^felt$|^fought$|^found$|^flew$|^forbade$|^forgot$|^forgave$|^froze$|^got$|^gave$|^went$|^ground$|^grew$|^hung$|^had$|^heard$|^hid$|^hit$|^held$|^hurt$|^kept$|^knelt$|^knew$|^laid$|^led$|^leant$|^leaned$|^learnt$|^learned$|^left$|^lent$|^lay$|^lied$|^lit$|^lighted$|^lost$|^made$|^might$|^meant$|^met$|^mowed$|^had to$|^overtook$|^paid$|^put$|^read$|^rode$|^rang$|^rose$|^ran$|^sawed$|^said$|^saw$|^sold$|^sent$|^set$|^sewed$|^shook$|^should$|^shed$|^shone$|^shot$|^showed$|^shrank$|^shut$|^sang$|^sank$|^sat$|^slept$|^slid$|^smelt$|^sowed$|^spoke$|^spelt$|^spelled$|^spent$|^spilt$|^spilled$|^spat$|^spread$|^stood$|^stole$|^stuck$|^stung$|^stank$|^struck$|^swore$|^swept$|^swelled$|^swam$|^swung$|^took$|^taught$|^tore$|^told$|^thought$|^threw$|^understood$|^woke$|^wore$|^wept$|^would$|^won$|^wound$|^wrote$|(.*)ed$", textsplitWord, value = T))` resultados seguintes:
+
+```{r}
+grep("^arose$|^awoke$|^was$|^were$|^bore$|^beat$|^became$|^began$|^bent$|^bet$|^bound$|^bit$|^bled$|^blew$|^broke$|^bred$|^brought$|^broadcast$|^built$|^burnt$|^burned$|^burst$|^bought$|^could$|^caught$|^chose$|^clung$|^came$|^cost$|^crept$|^cut$|^dealt$|^dug$|^did$|^drew$|^dreamt$|^dreamed$|^drank$|^drove$|^ate$|^fell$|^fed$|^felt$|^fought$|^found$|^flew$|^forbade$|^forgot$|^forgave$|^froze$|^got$|^gave$|^went$|^ground$|^grew$|^hung$|^had$|^heard$|^hid$|^hit$|^held$|^hurt$|^kept$|^knelt$|^knew$|^laid$|^led$|^leant$|^leaned$|^learnt$|^learned$|^left$|^lent$|^lay$|^lied$|^lit$|^lighted$|^lost$|^made$|^might$|^meant$|^met$|^mowed$|^had to$|^overtook$|^paid$|^put$|^read$|^rode$|^rang$|^rose$|^ran$|^sawed$|^said$|^saw$|^sold$|^sent$|^set$|^sewed$|^shook$|^should$|^shed$|^shone$|^shot$|^showed$|^shrank$|^shut$|^sang$|^sank$|^sat$|^slept$|^slid$|^smelt$|^sowed$|^spoke$|^spelt$|^spelled$|^spent$|^spilt$|^spilled$|^spat$|^spread$|^stood$|^stole$|^stuck$|^stung$|^stank$|^struck$|^swore$|^swept$|^swelled$|^swam$|^swung$|^took$|^taught$|^tore$|^told$|^thought$|^threw$|^understood$|^woke$|^wore$|^wept$|^would$|^won$|^wound$|^wrote$|(.*)ed$", textsplitWord, value = T)
+```
+
+### 3. Encontrando ocorrencias de *present perfect* no texto:
+
+Ainda sem implementar os verbos irregulares.
+
+```{r}
+# Separando texto por sentenças.
+textsplitPhrase <- strsplit(text, "\\.")[[1]]
+textsplitPhrase <- gsub("\n", "", textsplitPhrase)
+grep("has|have (.*)(ed|t)$(.*)", textsplitPhrase, value = T)
+```
+
+### 4. Encontrando ocorrências de *present continuous* no texto:
+
+```{r}
+# Separando texto por sentenças.
+textsplitPhrase <- strsplit(text, "\\.")[[1]]
+textsplitPhrase <- gsub("\n", "", textsplitPhrase)
+grep("(I am |I'm | is | are |'re |`s )(.*)ing(.*)", textsplitPhrase, value = T)
+```
+
+### 5. Quantidade de palavras diferentes (esboço para avaliar dificuldade do texto):
+
+```{r, return = 'hide', warning=F, message=F, error=F}
+library(tm)
+textsplitWord <- data.frame(textsplitWord)
+textsplitWord_corpus <- Corpus(VectorSource(textsplitWord$textsplitWord)) # transformando em corpus para limpar
+# PERCEBER! Corpus é um formato para muitos textos!!! Aqui, tratamos cada linha como um texto diferente, o que é inapropriado !!!!
+
+
+
+
+# VOU DIRECIONAR ESSE RELATORIO PARA O TRATAMENTO DE UM ÚNICO TEXTO
+
+
+
+textsplitWord_corpus <- tm_map(textsplitWord_corpus, tolower) # torna minuscula
+textsplitWord_corpus <- tm_map(textsplitWord_corpus, removeNumbers)
+textsplitWord_corpus <- tm_map(textsplitWord_corpus, removePunctuation)
+textsplitWord_corpus <- tm_map(textsplitWord_corpus, stemDocument, language = "english")
+```
+
+```{r, echo = F, eval = F, warning=F, message=F, error=F} 
+# esse chunk está desativado.
+# Ele serve para o caso de querer saber o numero de palavras sem repetições.
+# E, em seguida, quantos stopwords.
+textsplitWord_dtm <- DocumentTermMatrix(textsplitWord_corpus)
+textsplitWordMatrix <- as.matrix(textsplitWord_dtm)
+textsplitWordSorted <- sort(colSums(textsplitWordMatrix), decreasing = T)
+textsplitWordDF <- data.frame(word = names(textsplitWordSorted), freq = textsplitWordSorted)
+count(textsplitWordDF) # retiradas apenas as repetições
+```
+
+```{r, warning=F, message=F, error=F}
+textsplitWord_corpus <- tm_map(textsplitWord_corpus, removeWords, stopwords())
+# para ver como barras é preciso transformar em DTM, depois em matriz, depois em data.frame
+textsplitWord_dtm <- DocumentTermMatrix(textsplitWord_corpus)
+textsplitWordMatrix <- as.matrix(textsplitWord_dtm)
+textsplitWordSorted <- sort(colSums(textsplitWordMatrix), decreasing = T)
+textsplitWordDF <- data.frame(word = names(textsplitWordSorted), freq = textsplitWordSorted)
+```
+
+O texto contém **`r str_count(text, boundary("word"))` palavras**. Retiradas as *stopwords*, são **`r count(textsplitWordDF)` radicais** diferentes. Segue um gráfico de frequencia de repetição desses radicais: 
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+
+textsplitWordDFn <- textsplitWordDF %>% filter(textsplitWordDF$freq > 1) # selecionando os termos q aparecem mais de 1 vez 
+
+id <- order(textsplitWordDFn$freq, decreasing = TRUE)               # obter a ordena??o do volume
+levels <- textsplitWordDFn$word[id]                                   # criar os n?veis ordenados
+textsplitWordDFn$word <- factor(textsplitWordDFn$word, levels=levels, ordered=TRUE) # criar um factor com n?veis ordenados
+ggplot(data = textsplitWordDFn) + aes(x = textsplitWordDFn$word, y = textsplitWordDFn$freq) + #para add cores: "fill = word" como argumento em aes() 
+  geom_bar(stat = "identity") +   labs(x = "Palavras", y = 'Frequencia') + 
+  guides(fill=FALSE) +
+  coord_flip()
+
+```

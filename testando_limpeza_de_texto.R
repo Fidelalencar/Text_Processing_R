@@ -12,30 +12,30 @@ V1 <- "https://www.youtube.com/watch?v=fK2IJ43ppd0"
 V1 <- "https://www.youtube.com/watch?v=JCTzbc76WXY"
 V1 <- "https://www.youtube.com/watch?v=QRt7LjqJ45k" # video sobre "slow aging"
 V1 <- "https://www.youtube.com/watch?v=-LKVUarhtvE" # video sobre sabao e Covid-19
+v1 <- "https://www.youtube.com/watch?v=-EvvPZFdjyk" # why you will mary the wrong person
 
-Legendas <- get_caption(url = V1, savexl = FALSE, openxl = FALSE, path = getwd()) # Puxando a legenda
+Legendas <- get_caption(url = v1, savexl = FALSE, openxl = FALSE, path = getwd()) # Puxando a legenda
 
-Legendas_vec <- pull(Legendas4, text) # essa linha converte a coluna text de tibble para vetor
+Legendas_vec <- pull(Legendas, text) # essa linha converte a coluna text de tibble para vetor
 NcharLegendas <- nchar(Legendas_vec) # numero de caracteres por linha
 Nwords_Legendas <- str_count(Legendas_vec, boundary("word")) # numero de palavras por linha
 TpalavrasLegendas <- sum(Nwords_Legendas) # qntdd total de palavras
+
 
 Legendas_corpus <- Corpus(VectorSource(Legendas_vec)) # transformando vetor em corpus
 inspect(Legendas_corpus[22:27]) # para ler textos do corpos
 
 
+# Limpeza do corpus:
 # Legendas_corpus <- tm_map(Legendas_corpus, tolower) # Aparentemente, as legendas nao veem com letra maiuscula
-
-# CONTINUAR ...
-
-
-Legendas_corpus <- tm_map(Legendas_corpus, removeNumbers) # Limpeza do corpus
+Legendas_corpus <- tm_map(Legendas_corpus, removeNumbers) 
 Legendas_corpus <- tm_map(Legendas_corpus, removePunctuation)
 Legendas_corpus <- tm_map(Legendas_corpus, removeWords, stopwords("english")) 
 # exemplos de diferença da redução de palavras com e sem stopwords: 1455 -> 760  / 2514 -> 1357 / 2449 -> 1414
 Legendas_corpus <- tm_map(Legendas_corpus, stripWhitespace)
 Legendas_corpus <- tm_map(Legendas_corpus, stemDocument, language = "english")
 # Diferença de caracteres com e sem stemming: 5494 -> 4556  / 9881 -> 8271  / 9926 -> 8567
+
 
 
 # devolvendo para a classe vetor:
@@ -71,6 +71,5 @@ textsplitWordMatrix <- as.matrix(textsplitWord_dtm)
 textsplitWordSorted <- sort(colSums(textsplitWordMatrix), decreasing = T)
 textsplitWordDF <- data.frame(word = names(textsplitWordSorted), freq = textsplitWordSorted)
 NwordsLegendas <- count(textsplitWordDF)  # ___ palavras diferentes
-
 
 
