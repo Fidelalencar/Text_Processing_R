@@ -1,13 +1,5 @@
 # CAPTURA DE LEGENDAS do YouTube: youtubecaption E analise básica do que é falado ----
 
-##### LISTA DE VIDEOS
-videos <- c(
-  "https://www.youtube.com/watch?v=HIdflecvQG8", 
-  "https://www.youtube.com/watch?v=fK2IJ43ppd0", 
-  "https://www.youtube.com/watch?v=JCTzbc76WXY", 
-  "https://www.youtube.com/watch?v=QRt7LjqJ45k", 
-  "https://www.youtube.com/watch?v=-LKVUarhtvE"
-)
 
 ##### CRIANDO A FUNCAO ----
 Dados_basicos_legenda <- function(Insira_Link_do_Video_aqui) {
@@ -78,8 +70,22 @@ Dados_basicos_legenda <- function(Insira_Link_do_Video_aqui) {
 }
 
 # ----
+#### USANDO A FUNCAO 1 VEZ ----
+Insira_Link_do_Video_aqui <- "https://www.youtube.com/watch?v=fK2IJ43ppd0"
+Dados_basicos_legenda(Insira_Link_do_Video_aqui)
 
-##### USANDO A FUNCAO REPETIDAMENTE PARA GERAR TABELA COM DADOS DE VARIOS VIDEOS!!!
+
+
+##### USANDO A FUNCAO REPETIDAMENTE PARA GERAR TABELA COM DADOS DE VARIOS VIDEOS!!! ----
+
+videos <- c(
+  "https://www.youtube.com/watch?v=HIdflecvQG8", 
+  "https://www.youtube.com/watch?v=fK2IJ43ppd0", 
+  "https://www.youtube.com/watch?v=JCTzbc76WXY", 
+  "https://www.youtube.com/watch?v=QRt7LjqJ45k", 
+  "https://www.youtube.com/watch?v=-LKVUarhtvE",
+)
+
 
 if(require(purrr) == F) install.packages("purrr"); require(purrr)
 tabela <- as.data.frame(  # essas linhas convertem a lista em data.frame

@@ -3,26 +3,40 @@
 # e ela me retorne um simples exercício de substituicao de algumas daquelas palavras
 
 
-
-
+if(require(youtubecaption) == F) install.packages("youtubecaption"); require(youtubecaption)
 if(require(dplyr) == F) install.packages("dplyr"); require(dplyr)
 if(require(RSQLite) == F) install.packages("RSQLite"); require(RSQLite)
 if(require(tm) == F) install.packages("tm"); require(tm)
 if(require(tidyverse) == F) install.packages("tidyverse"); require(tidyverse)
 if(require(tokenizers) == F) install.packages("tokenizers"); require(tokenizers)
+if(require(purrr) == F) install.packages("purrr"); require(purrr)
+
+#### BAIXANDO A LEGENDA ----
+Insira_Link_do_Video_aqui <- "https://www.youtube.com/watch?v=XRr1kaXKBsU&t=2s"
+
+# SCHOOL OF LIFE  
+Legendas <- get_caption(url = Insira_Link_do_Video_aqui, 
+                        language = "en-GB", # ATENÇÃO PARA A ESCOLHA DA LEGENDA
+               savexl = FALSE, openxl = FALSE, path = getwd())
+
+# VERITASIUM
+Legendas <- get_caption(url = Insira_Link_do_Video_aqui, language = "en", 
+               savexl = FALSE, openxl = FALSE, path = getwd())
+####
+
+#### BUSCA/MATCH ----
+a <- paste(Legendas$text, sep = " ")
+bnumero <- grep("'m | am |'s | is |'re | are ", a, # verb to be affirmative present
+               value = F)
+aleat <- sample(bnumero, 5)
+bfrase <- a[aleat]  #  seleciona aleatoriamente 5 das frases do match e extrai as frases
+
+Legendas[aleat, 1:2]
 
 
-# baixando uma legenda
-Insira_Link_do_Video_aqui <- "https://www.youtube.com/watch?v=fK2IJ43ppd0"
-Legendas <- get_caption(url = Insira_Link_do_Video_aqui, savexl = FALSE, openxl = FALSE, path = getwd())
 
 
-
-# O primeiro problema é que as legendas estao vindo sem pontuacao.
-# aparentemente esse é o codigo de como esse pacote pega a legenda
-# precisaria modificá-lo para obter com a pontuação.
-
-
+#### 
 
 # limpando, stemming e convertendo para o formato adequado
 Legendas_string <- pull(Legendas, text) # converte o tibble em vetor
@@ -63,3 +77,6 @@ FiveThouMostFreq$words <- str_replace(FiveThouMostFreq$words, " ", "") # ainda p
 # Fazendo o match e identificando quantas palvras existem em comum entre as legendas e o dicionario de 5 mil palavras 
 Common_words <- inner_join(Legendas_corpus_limpo, FiveThouMostFreq) # encontrando as palavras que estao nas legendas e no dicionario
 Common_words <- unique(Common_words)  # retirando as duplicatas
+
+
+

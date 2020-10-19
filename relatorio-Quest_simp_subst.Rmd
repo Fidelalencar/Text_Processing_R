@@ -1,0 +1,89 @@
+---
+title: "Relatorio_Quest_Simpl_substitu"
+output: html_document
+---
+
+A ideia desse documento é produzir um relatório para questões de simples substituição para nível básico
+
+### 0. Exemplo de texto:
+```{r, echo = FALSE, warning = F}
+
+if(require(youtubecaption) == F) install.packages("youtubecaption"); require(youtubecaption)
+
+Insira_Link_do_Video_aqui <- "https://www.youtube.com/watch?v=XRr1kaXKBsU&t=2s"
+Legendas <- get_caption(url = Insira_Link_do_Video_aqui, language = "en", 
+               savexl = FALSE, openxl = FALSE, path = getwd())
+```
+
+```{r echo = FALSE, results = "asis"} 
+library(knitr)
+kable(Legendas[, 1:2], caption = "Legendas")
+```
+
+### 1. Palavras básicas das frases:
+```{r echo = FALSE, results = "asis"}
+if(require(purrr) == F) install.packages("purrr"); require(purrr)
+if(require(dplyr) == F) install.packages("dplyr"); require(dplyr)
+if(require(tm) == F) install.packages("tm"); require(tm)
+if(require(tokenizers) == F) install.packages("tokenizers"); require(tokenizers)
+if(require(stringr) == F) install.packages("stringr"); require(stringr)
+
+Legendas_string <- pull(Legendas, text)
+Legendas_corpus <- Corpus(VectorSource(Legendas_string)) # criando corpus
+  
+Legendas_corpus <- tm_map(Legendas_corpus, tolower)
+Legendas_corpus <- tm_map(Legendas_corpus, removeNumbers)
+Legendas_corpus <- tm_map(Legendas_corpus, removePunctuation)
+Legendas_corpus <- tm_map(Legendas_corpus, removeWords, stopwords("english"))
+Legendas_corpus <- tm_map(Legendas_corpus, stripWhitespace)
+Legendas_corpus <- tm_map(Legendas_corpus, stemDocument, language = "english")
+ 
+# ajustando para comparar com o dicionario de 5 mil palavras
+Legendas_corpus_limpo <- as.data.frame(Legendas_corpus$content)
+Legendas_corpus_limpo <- map(Legendas_corpus_limpo, tokenize_words) # convertendo o dataframe em lista
+Legendas_corpus_limpo <- data.frame(matrix(unlist(Legendas_corpus_limpo), # Convertendo a lista em Data Frame
+                                             nrow=length(Legendas_corpus_limpo), byrow=F), stringsAsFactors=FALSE)
+Legendas_corpus_limpo <- map(Legendas_corpus_limpo, tokenize_words) # convertendo o dataframe em lista
+Legendas_corpus_limpo <- data.frame(matrix(unlist(Legendas_corpus_limpo), # Convertendo a lista em Data Frame
+                                             nrow=length(Legendas_corpus_limpo), byrow=F), stringsAsFactors=FALSE)
+# mudando o nome da coluna
+Legendas_corpus_limpo["words"] <- Legendas_corpus_limpo["matrix.unlist.Legendas_corpus_limpo...nrow...length.Legendas_corpus_limpo..."]
+Legendas_corpus_limpo$matrix.unlist.Legendas_corpus_limpo...nrow...length.Legendas_corpus_limpo... <- NULL
+
+
+# Carregando a Lista de 5000 palavras ----
+setwd("C:/Users/Paren/Dropbox/Udacity/LearningCommunityConteudo/listas_palavras") 
+FiveThouMostFreq <- read.csv2("5000MostFreqWords.csv", sep = ";",  header = T)
+# limpando, stemming e convertendo no formato adequado
+FiveThouMostFreq <- Corpus(VectorSource(as.vector(FiveThouMostFreq$Word)))
+FiveThouMostFreq <- tm_map(FiveThouMostFreq, stemDocument, language = "english")
+FiveThouMostFreq <- tm_map(FiveThouMostFreq, stripWhitespace)
+FiveThouMostFreq <- data.frame(matrix(unlist(FiveThouMostFreq$content), # Convertendo a lista em Data Frame
+                                        nrow=length(FiveThouMostFreq$content), byrow=F), stringsAsFactors=FALSE)
+FiveThouMostFreq["words"] <- FiveThouMostFreq["matrix.unlist.FiveThouMostFreq.content...nrow...length.FiveThouMostFreq.content..."]
+  # mudando o nome da coluna
+FiveThouMostFreq$matrix.unlist.FiveThouMostFreq.content...nrow...length.FiveThouMostFreq.content... <- NULL
+FiveThouMostFreq$words <- str_replace(FiveThouMostFreq$words, " ", "") # ainda precisava limpar os espacos no inicio das strings
+
+# Fazendo o match e identificando quantas palvras existem em comum entre as legendas e o dicionario de 5 mil palavras 
+Common_words <- inner_join(Legendas_corpus_limpo, FiveThouMostFreq) # encontrando as palavras que estao nas legendas e no dicionario
+Common_words <- unique(Common_words)  # retirando as duplicatas
+
+# kable(Common_words[,1]) # retorna a lista de palavras basicas deste texto
+count(Common_words)  # quantidade de palavras básicas desta legenda
+```    
+
+
+### 2. Seleção de sentenças com uma palavra do dicionario basico e com verbo to be no presente:
+```{r echo = FALSE, results = "asis"} 
+library(knitr)
+a <- paste(Legendas$text, sep = " ")
+tobe_num <- grep("'m | am |'s | is |'re | are ", a, # indices das linhas com verb to be affirmative present
+               value = F)
+bl <- unique(c(Common_words[,0], tobe_num)) # as linhas com palavras básicas e verbo to be
+aleat <- as.numeric(sample(bl, 5))          # selecionando uma amostra aleatoria de 5
+
+kable(Legendas[aleat,1:3], caption = "Random Selection of Sentences with Verb to be in present affirmative")
+
+```  
+  

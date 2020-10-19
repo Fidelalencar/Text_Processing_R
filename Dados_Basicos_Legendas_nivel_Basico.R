@@ -1,18 +1,9 @@
-# CAPTURA DE LEGENDAS do YouTube: youtubecaption E analise básica 
-# Tendo como Referencia o dicionário de 5 mil palavras 
-# ou seja, ele deve estar focado no nivel básico ----
-
-##### LISTA DE VIDEOS
-videos <- c(
-  "https://www.youtube.com/watch?v=HIdflecvQG8", 
-  "https://www.youtube.com/watch?v=fK2IJ43ppd0", 
-  "https://www.youtube.com/watch?v=JCTzbc76WXY", 
-  "https://www.youtube.com/watch?v=QRt7LjqJ45k", 
-  "https://www.youtube.com/watch?v=-LKVUarhtvE"
-)
+# CAPTURA DE LEGENDAS do YouTube: youtubecaption E analise básica do numero de palavras
+# Inclui analise usando como Referencia o dicionário de 5 mil palavras 
+# ou seja, é como uma ferramenta para buscar textos de niveis de inglês mais baixo  ----
 
 ##### CRIANDO A FUNCAO ----
-Dados_basicos_legenda <- function(Insira_Link_do_Video_aqui) {
+Dados_basicos_legenda_basico <- function(Insira_Link_do_Video_aqui) {
   
   # Captura da legenda:
   if(require(youtubecaption) == F) install.packages("youtubecaption"); require(youtubecaption)
@@ -101,7 +92,7 @@ Dados_basicos_legenda <- function(Insira_Link_do_Video_aqui) {
   TdurationLegendas  # ___ segundos
   ratioVocPorsec <- NwordsLegendas/TdurationLegendas # ___ palavras diferentes por segundo
   ratioPalavPorsec <- TpalavrasLegendas/TdurationLegendas # ___ palavras por segundo
-  n_commonwords <- as.numeric(count(Common_words)) # numero de palavras comuns ao dic de 5000
+  n_commonwords <- count(Common_words) # numero de palavras comuns ao dic de 5000
   
   N_de_Palavras <- round(as.numeric(TpalavrasLegendas), 1)
   Vocabulario <- round(as.numeric(NwordsLegendas), 1)
@@ -119,12 +110,31 @@ Dados_basicos_legenda <- function(Insira_Link_do_Video_aqui) {
   #   "TpalavrasLegendas", "Vocabulario", "Vocabulario_PorSeg")
   
   tabela <- as.data.frame(cbind(N_de_Palavras, Vocabulario, Tempo_minutos, Vocabulario_PorSeg, Palavras_PorSeg, n_commonwords))
+  colnames(tabela) <- c("Número de Palavras", "Vocabulario", 
+                        "Tempo em minutos", "Vocabulario por segundo", 
+                        "Palavras por segundo", "Palavras entre as 5 mil")
   return(tabela)
 }
 
 # ----
 
-##### USANDO A FUNCAO REPETIDAMENTE PARA GERAR TABELA COM DADOS DE VARIOS VIDEOS!!!
+##### USANDO A FUNCAO PARA UM UNICO VIDEO ----
+Insira_Link_do_Video_aqui <- "https://www.youtube.com/watch?v=fK2IJ43ppd0"
+Dados_basicos_legenda_basico(Insira_Link_do_Video_aqui)
+
+
+
+##### USANDO A FUNCAO REPETIDAMENTE PARA GERAR TABELA COM DADOS DE VARIOS VIDEOS!!! ----
+
+videos <- c(
+  "https://www.youtube.com/watch?v=HIdflecvQG8", 
+  "https://www.youtube.com/watch?v=fK2IJ43ppd0", 
+  "https://www.youtube.com/watch?v=JCTzbc76WXY", 
+  "https://www.youtube.com/watch?v=QRt7LjqJ45k", 
+  "https://www.youtube.com/watch?v=-LKVUarhtvE",
+  "https://www.youtube.com/watch?v=XRr1kaXKBsU",
+  "https://www.youtube.com/watch?v=3LopI4YeC4I"
+)
 
 if(require(purrr) == F) install.packages("purrr"); require(purrr)
 tabela <- as.data.frame(
