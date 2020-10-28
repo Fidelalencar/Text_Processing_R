@@ -6,9 +6,9 @@
 
 
 
-#### 
+#### B1 EXTRAINDO LISTA DE PALAVRAS COMUNS ENTRE UM A LEGENDA E A LISTA DE 5000 PALAVRAS
 
-# limpando, stemming e convertendo para o formato adequado
+## B2. limpando, stemming e convertendo as legendas para o formato adequado
 Legendas_string <- pull(Legendas, text) # converte o tibble em vetor
 Legendas_corpus <- Corpus(VectorSource(Legendas_string)) # converte os vetores em corpus
 Legendas_corpus_limpo <- tm_map(Legendas_corpus, removeWords, stopwords("english")) # Limpando as stopwords
@@ -28,12 +28,7 @@ Legendas_corpus_limpo["words"] <- Legendas_corpus_limpo["matrix.unlist.Legendas_
 Legendas_corpus_limpo$matrix.unlist.Legendas_corpus_limpo...nrow...length.Legendas_corpus_limpo... <- NULL
 
 
-
-
-
-
-
-# Carregando a Lista de 5000 palavras ----
+## B3. Carregando a Lista de 5000 palavras ----
 setwd("C:/Users/Paren/Dropbox/Udacity/LearningCommunityConteudo/listas_palavras") 
 FiveThouMostFreq <- read.csv2("5000MostFreqWords.csv", sep = ";",  header = T)
 # limpando, stemming e convertendo no formato adequado
@@ -48,43 +43,16 @@ FiveThouMostFreq$matrix.unlist.FiveThouMostFreq.content...nrow...length.FiveThou
 FiveThouMostFreq$words <- str_replace(FiveThouMostFreq$words, " ", "") # ainda precisava limpar os espacos no inicio das strings
 
 
-# Fazendo o match e identificando quantas palvras existem em comum entre as legendas e o dicionario de 5 mil palavras 
+## B4. Fazendo o match e identificando quantas palvras existem em comum entre as legendas e o dicionario de 5 mil palavras 
 Common_words <- inner_join(Legendas_corpus_limpo, FiveThouMostFreq) # encontrando as palavras que estao nas legendas e no dicionario
 Common_words <- unique(Common_words)  # retirando as duplicatas
-
-
-
-
-#####
 
 
 #######
 
 
-Legendas_string <- pull(Legendas, text) # converte o tibble em vetor
-Legendas_corpus <- Corpus(VectorSource(Legendas_string)) # converte os vetores em corpus
-Legendas_corpus_limpo <- tm_map(Legendas_corpus, removeWords, stopwords("english")) # Limpando as stopwords
-Legendas_corpus_limpo <- tm_map(Legendas_corpus_limpo, removeNumbers)
-Legendas_corpus_limpo <- tm_map(Legendas_corpus_limpo, removePunctuation)
-Legendas_corpus_limpo <- tm_map(Legendas_corpus_limpo, stripWhitespace)
-Legendas_corpus_limpo <- tm_map(Legendas_corpus_limpo, stemDocument, language = "english")
 
-# transformando em document term matrix em ordem decrescente
-textsplitWord_dtm <- DocumentTermMatrix(Legendas_corpus_limpo)
-textsplitWordMatrix <- as.matrix(textsplitWord_dtm)
-labels <- labels(textsplitWord_dtm)                   # lista das palavras
-textsplitWordcolsums <- colSums(textsplitWordMatrix)  # quantidade de vezes que a palavra aparece
-textsplitWordSorted <- sort(textsplitWordcolsums, decreasing = T) # ordenadas
-
-
-
-labels(textsplitWordSorted[26]) == FiveThouMostFreq$words[48] # como esta acontecendo o match
-
-
-
-
-
-########## Chamando pacotes necessarios ----
+########## C1. Chamando pacotes necessarios ----
 if(require(youtubecaption) == F) install.packages("youtubecaption"); require(youtubecaption)
 if(require(dplyr) == F) install.packages("dplyr"); require(dplyr)
 if(require(RSQLite) == F) install.packages("RSQLite"); require(RSQLite)
@@ -218,53 +186,12 @@ matches_da_legenda <- function(Legenda) {
     
 Legendas <- matches_da_legenda(Legendas)    
 
-
 Legendas <- Legendas[order(Legendas$matches, decreasing = T),]   # ordenando pelo valor dos matches (maiores primeiro)  
 
 
 #######################  
 ######################
 
-
-
-
-##### D1. FUNCAO QUE CRIA UMA LISTA DAS FREQUENCIAS DE PALAVRAS.
-
-Legendas_vec <- pull(Legendas_, text)   # Converte a coluna text de tibble para vetor
-
-Nwords_Legendas <- str_count(Legendas_vec, boundary("word")) # numero de palavras por linha
-TotPalavras <- sum(Nwords_Legendas)     # qntdd total de palavras
-
-Legendas_corpus <- Corpus(VectorSource(Legendas_vec))   # transformando vetor em corpus
-
-# Limpando
-Legendas_corpus <- tm_map(Legendas_corpus, removeNumbers)
-Legendas_corpus <- tm_map(Legendas_corpus, removeWords, stopwords("english")) 
-Legendas_corpus <- tm_map(Legendas_corpus, stemDocument, language = "english")
-
-Legendas_vecClean <- Legendas_corpus$content # retornando de corpus para vetor
-
-Nwords_Legendas_vecClean <- str_count(legendas_vecClean, boundary("word")) # numero de palavras por linha
-TotPalavras_Legendas_vecClean <- sum(Nwords_Legendas_vecClean)     # qntdd total de palavras
-
-
-texto_clean <- paste(Legendas_vecClean, sep = " ", collapse = " ")
-
-
-# Para obter uma lista das palavras mais frequentes:
-# para ver como barras é preciso transformar em DTM, depois em matriz, depois em data.frame
-textsplitWord_dtm <- DocumentTermMatrix(Legendas_corpus)
-textsplitWordMatrix <- as.matrix(textsplitWord_dtm)
-textsplitWordSorted <- sort(colSums(textsplitWordMatrix), decreasing = T)
-textsplitWordDF <- data.frame(word = names(textsplitWordSorted), freq = textsplitWordSorted) # Lista ordenada de palavras mais frequentes
-
-textsplitWordDF[1:30,] # Para saber as 30 mais freqentes.
-
-NwordsLegendas <- count(textsplitWordDF) # numero de palavras diferentes
-
-textsplitWordDF_filter <- subset(textsplitWordDF, textsplitWordDF$freq > 1)  # DF com palavras que aparecem mais de uma vez
-
-######################
 
 
 
@@ -289,27 +216,6 @@ tabela <- map(c("casa", "relogio"),
 # como adicionar elemento a lista
 x <- list("a","b")
 x <- append(letters[3], x)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
