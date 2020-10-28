@@ -228,6 +228,46 @@ Legendas <- Legendas[order(Legendas$matches, decreasing = T),]   # ordenando pel
 
 
 
+##### D1. FUNCAO QUE CRIA UMA LISTA DAS FREQUENCIAS DE PALAVRAS.
+
+Legendas_vec <- pull(Legendas_, text)   # Converte a coluna text de tibble para vetor
+
+Nwords_Legendas <- str_count(Legendas_vec, boundary("word")) # numero de palavras por linha
+TotPalavras <- sum(Nwords_Legendas)     # qntdd total de palavras
+
+Legendas_corpus <- Corpus(VectorSource(Legendas_vec))   # transformando vetor em corpus
+
+# Limpando
+Legendas_corpus <- tm_map(Legendas_corpus, removeNumbers)
+Legendas_corpus <- tm_map(Legendas_corpus, removeWords, stopwords("english")) 
+Legendas_corpus <- tm_map(Legendas_corpus, stemDocument, language = "english")
+
+Legendas_vecClean <- Legendas_corpus$content # retornando de corpus para vetor
+
+Nwords_Legendas_vecClean <- str_count(legendas_vecClean, boundary("word")) # numero de palavras por linha
+TotPalavras_Legendas_vecClean <- sum(Nwords_Legendas_vecClean)     # qntdd total de palavras
+
+
+texto_clean <- paste(Legendas_vecClean, sep = " ", collapse = " ")
+
+
+# Para obter uma lista das palavras mais frequentes:
+# para ver como barras é preciso transformar em DTM, depois em matriz, depois em data.frame
+textsplitWord_dtm <- DocumentTermMatrix(Legendas_corpus)
+textsplitWordMatrix <- as.matrix(textsplitWord_dtm)
+textsplitWordSorted <- sort(colSums(textsplitWordMatrix), decreasing = T)
+textsplitWordDF <- data.frame(word = names(textsplitWordSorted), freq = textsplitWordSorted) # Lista ordenada de palavras mais frequentes
+
+textsplitWordDF[1:30,] # Para saber as 30 mais freqentes.
+
+NwordsLegendas <- count(textsplitWordDF) # numero de palavras diferentes
+
+textsplitWordDF_filter <- subset(textsplitWordDF, textsplitWordDF$freq > 1)  # DF com palavras que aparecem mais de uma vez
+
+######################
+
+
+
 
 
 ##### E1. OUTRAS COISAS QUE PODEM SER UTEIS NOS PROXIMOS PASSOS ----
